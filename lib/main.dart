@@ -50,14 +50,14 @@ class UserAccount {
 }
 
 class PropertyItem {
-  String id;
-  String title;
-  String location;
-  String size;
-  double priceNumeric;
-  String priceDisplay;
-  String badge;
-  String imageUrl;
+  final String id;
+  final String title;
+  final String location;
+  final String size;
+  final double priceNumeric;
+  final String priceDisplay;
+  final String badge;
+  final String imageUrl;
 
   PropertyItem({
     required this.id,
@@ -71,7 +71,7 @@ class PropertyItem {
   });
 }
 
-// Global App State (Mock database for stateful session)
+// Global App State
 class AppDatabase {
   static UserAccount? currentUser;
 
@@ -79,7 +79,7 @@ class AppDatabase {
     PropertyItem(
       id: 'PROP-101',
       title: 'MKM Green Paradise',
-      location: 'Sector 15, Near National Highway',
+      location: 'Sector 15, Near Highway',
       size: '1500 sq.ft (30x50)',
       priceNumeric: 1875000,
       priceDisplay: '₹1,250 / sq.ft (Total ₹18.75L)',
@@ -89,7 +89,7 @@ class AppDatabase {
     PropertyItem(
       id: 'PROP-102',
       title: 'MKM Royal Residency',
-      location: 'Airport Road, Ring Road Junction',
+      location: 'Airport Road, Ring Road',
       size: '1800 sq.ft (Corner Plot)',
       priceNumeric: 2970000,
       priceDisplay: '₹1,650 / sq.ft (Total ₹29.70L)',
@@ -99,7 +99,7 @@ class AppDatabase {
     PropertyItem(
       id: 'PROP-103',
       title: 'MKM Smart City Township',
-      location: 'Near Proposed Metro Phase 2',
+      location: 'Near Proposed Metro Station',
       size: '1000 sq.ft (25x40)',
       priceNumeric: 999000,
       priceDisplay: '₹999 / sq.ft (Total ₹9.99L)',
@@ -126,7 +126,7 @@ class AppDatabase {
   ];
 }
 
-// ==================== AUTH / LOGIN SCREEN ====================
+// ==================== AUTH SCREEN ====================
 
 class AuthGateScreen extends StatefulWidget {
   const AuthGateScreen({super.key});
@@ -147,7 +147,6 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
     final pass = _passwordController.text.trim();
 
     if (isAdminTab) {
-      // Hardcoded Admin Passcode for demonstration
       if (pass == 'admin123') {
         AppDatabase.currentUser = UserAccount(
           id: 'ADMIN-001',
@@ -164,7 +163,6 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
         setState(() => errorMessage = 'Invalid Admin Passcode! (Default: admin123)');
       }
     } else {
-      // Agent Login
       final agent = AppDatabase.registeredAgents.firstWhere(
         (a) => a.id.toLowerCase() == id.toLowerCase() || a.phone.contains(id),
         orElse: () => UserAccount(
@@ -183,7 +181,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
           MaterialPageRoute(builder: (_) => const MainAppNavigationScreen()),
         );
       } else {
-        setState(() => errorMessage = 'Agent ID or Phone not found! Try: AGT-101');
+        setState(() => errorMessage = 'Agent ID not found! Enter: AGT-101');
       }
     }
   }
@@ -222,7 +220,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1.5),
               ),
               const Text(
-                'Enterprise Marketing & CRM System',
+                'Marketing & Agent CRM Portal',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               const SizedBox(height: 30),
@@ -233,7 +231,6 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // Mode Selector
                       Row(
                         children: [
                           Expanded(
@@ -264,7 +261,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                         TextField(
                           controller: _idController,
                           decoration: const InputDecoration(
-                            labelText: 'Agent ID or Mobile Number',
+                            labelText: 'Agent ID',
                             hintText: 'e.g. AGT-101',
                             prefixIcon: Icon(Icons.badge),
                             border: OutlineInputBorder(),
@@ -275,7 +272,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                           controller: _passwordController,
                           obscureText: true,
                           decoration: const InputDecoration(
-                            labelText: 'Admin Master Passcode',
+                            labelText: 'Admin Password',
                             hintText: 'admin123',
                             prefixIcon: Icon(Icons.lock),
                             border: OutlineInputBorder(),
@@ -297,12 +294,12 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           onPressed: _handleLogin,
-                          child: Text(isAdminTab ? 'Access Admin Console' : 'Login as Agent', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(isAdminTab ? 'Open Admin Panel' : 'Login as Agent', style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        isAdminTab ? 'Default Pass: admin123' : 'Quick Demo ID: AGT-101',
+                        isAdminTab ? 'Admin Pass: admin123' : 'Demo Agent ID: AGT-101',
                         style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ],
@@ -317,7 +314,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
   }
 }
 
-// ==================== MAIN SHELL NAVIGATION ====================
+// ==================== NAVIGATION SHELL ====================
 
 class MainAppNavigationScreen extends StatefulWidget {
   const MainAppNavigationScreen({super.key});
@@ -332,12 +329,12 @@ class _MainAppNavigationScreenState extends State<MainAppNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AppDatabase.currentUser!;
-    final isAdmin = user.role == UserRole.admin;
+    final bool isAdmin = user.role == UserRole.admin;
 
-    final List<Widget> screens = [
+    final List<Widget> screens = <Widget>[
       const PropertyDirectoryScreen(),
       const EMICalculatorScreen(),
-      if (isAdmin) const AdminDashboardScreen() else const AgentProfileScreen(),
+      isAdmin ? const AdminDashboardScreen() : const AgentProfileScreen(),
     ];
 
     return Scaffold(
@@ -346,12 +343,12 @@ class _MainAppNavigationScreenState extends State<MainAppNavigationScreen> {
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
         destinations: [
-          const NavigationDestination(icon: Icon(Icons.home_work_outlined), selectedIcon: Icon(Icons.home_work), label: 'Properties'),
-          const NavigationDestination(icon: Icon(Icons.calculate_outlined), selectedIcon: Icon(Icons.calculate), label: 'EMI Calculator'),
+          const NavigationDestination(icon: Icon(Icons.home_work_outlined), selectedIcon: Icon(Icons.home_work), label: 'Plots'),
+          const NavigationDestination(icon: Icon(Icons.calculate_outlined), selectedIcon: Icon(Icons.calculate), label: 'EMI'),
           if (isAdmin)
             const NavigationDestination(icon: Icon(Icons.admin_panel_settings_outlined), selectedIcon: Icon(Icons.admin_panel_settings), label: 'Admin Desk')
           else
-            const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'My Agent Profile'),
+            const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
@@ -377,8 +374,8 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('MKM Available Plots', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
-            Text('Logged as: ${user.name} (${user.role == UserRole.admin ? 'Admin' : user.id})', style: const TextStyle(fontSize: 11, color: Colors.white70)),
+            const Text('MKM Plot Inventory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+            Text('${user.name} (${user.role == UserRole.admin ? 'Admin' : user.id})', style: const TextStyle(fontSize: 11, color: Colors.white70)),
           ],
         ),
         backgroundColor: const Color(0xFF0D47A1),
@@ -426,7 +423,6 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFB300),
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                         ),
                         child: Text(
                           prop.badge,
@@ -457,15 +453,15 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Plot Size', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                              const Text('Dimensions', style: TextStyle(color: Colors.grey, fontSize: 11)),
                               Text(prop.size, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                             ],
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text('Offering Price', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                              Text(prop.priceDisplay, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                              const Text('Rate & Total', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                              Text(prop.priceDisplay, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
                             ],
                           ),
                         ],
@@ -489,7 +485,7 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
                             );
                           },
                           icon: const Icon(Icons.auto_awesome, size: 18),
-                          label: const Text('Generate Branded Poster'),
+                          label: const Text('Create Branded Poster'),
                         ),
                       ),
                     ],
@@ -504,7 +500,7 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
   }
 }
 
-// ==================== DYNAMIC POSTER STUDIO ====================
+// ==================== POSTER STUDIO SCREEN ====================
 
 class PosterDesignStudio extends StatefulWidget {
   final PropertyItem property;
@@ -517,12 +513,12 @@ class PosterDesignStudio extends StatefulWidget {
 }
 
 class _PosterDesignStudioState extends State<PosterDesignStudio> {
-  String selectedBadge = 'Special Festive Offer';
-  final List<String> availableBadges = [
-    'Special Festive Offer',
+  String selectedBadge = 'Immediate Registry';
+  final List<String> availableBadges = <String>[
     'Immediate Registry',
     'Bank Loan Approved',
     'Corner Plot Available',
+    'Festive Offer',
     'Prime Location',
   ];
 
@@ -539,10 +535,15 @@ class _PosterDesignStudioState extends State<PosterDesignStudio> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Choose Promotional Tagline:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Choose Promotional Tag:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: availableBadges.map((badge) {
-                final isSelected = selectedBadge == badge;
-              
+              children: availableBadges.map<Widget>((String badge) {
+                final bool isSel = selectedBadge == badge;
+                return ChoiceChip(
+                  label: Text(badge, style: TextStyle(fontSize: 11, color: isSel ? Colors.white : Colors.black87)),
+                  selected: isSel,
+                  selectedColor: const Color(0xFF0D47A1),
+                  onSelected: (bool val) {
+                    s
