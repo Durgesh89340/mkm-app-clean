@@ -29,8 +29,7 @@ class MKMEnterpriseApp extends StatelessWidget {
   }
 }
 
-// ==================== DATA MODELS ====================
-
+// DATA MODELS
 enum UserRole { admin, agent }
 
 class UserAccount {
@@ -71,7 +70,7 @@ class PropertyItem {
   });
 }
 
-// Global App State
+// MOCK DB
 class AppDatabase {
   static UserAccount? currentUser;
 
@@ -126,8 +125,7 @@ class AppDatabase {
   ];
 }
 
-// ==================== AUTH SCREEN ====================
-
+// AUTH SCREEN
 class AuthGateScreen extends StatefulWidget {
   const AuthGateScreen({super.key});
 
@@ -160,7 +158,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
           MaterialPageRoute(builder: (_) => const MainAppNavigationScreen()),
         );
       } else {
-        setState(() => errorMessage = 'Invalid Admin Passcode! (Default: admin123)');
+        setState(() => errorMessage = 'Invalid Admin Passcode! (Use: admin123)');
       }
     } else {
       final agent = AppDatabase.registeredAgents.firstWhere(
@@ -257,7 +255,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      if (!isAdminTab) ...[
+                      if (!isAdminTab)
                         TextField(
                           controller: _idController,
                           decoration: const InputDecoration(
@@ -266,8 +264,8 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                             prefixIcon: Icon(Icons.badge),
                             border: OutlineInputBorder(),
                           ),
-                        ),
-                      ] else ...[
+                        )
+                      else
                         TextField(
                           controller: _passwordController,
                           obscureText: true,
@@ -278,7 +276,6 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
                             border: OutlineInputBorder(),
                           ),
                         ),
-                      ],
                       if (errorMessage != null) ...[
                         const SizedBox(height: 12),
                         Text(errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
@@ -314,8 +311,7 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
   }
 }
 
-// ==================== NAVIGATION SHELL ====================
-
+// NAVIGATION SHELL
 class MainAppNavigationScreen extends StatefulWidget {
   const MainAppNavigationScreen({super.key});
 
@@ -331,14 +327,14 @@ class _MainAppNavigationScreenState extends State<MainAppNavigationScreen> {
     final user = AppDatabase.currentUser!;
     final bool isAdmin = user.role == UserRole.admin;
 
-    final List<Widget> screens = <Widget>[
+    final pages = [
       const PropertyDirectoryScreen(),
       const EMICalculatorScreen(),
-      isAdmin ? const AdminDashboardScreen() : const AgentProfileScreen(),
+      if (isAdmin) const AdminDashboardScreen() else const AgentProfileScreen(),
     ];
 
     return Scaffold(
-      body: screens[_currentIndex],
+      body: pages[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
@@ -355,16 +351,10 @@ class _MainAppNavigationScreenState extends State<MainAppNavigationScreen> {
   }
 }
 
-// ==================== PROPERTY LIST SCREEN ====================
-
-class PropertyDirectoryScreen extends StatefulWidget {
+// PROPERTY LIST SCREEN
+class PropertyDirectoryScreen extends StatelessWidget {
   const PropertyDirectoryScreen({super.key});
 
-  @override
-  State<PropertyDirectoryScreen> createState() => _PropertyDirectoryScreenState();
-}
-
-class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AppDatabase.currentUser!;
@@ -500,8 +490,7 @@ class _PropertyDirectoryScreenState extends State<PropertyDirectoryScreen> {
   }
 }
 
-// ==================== POSTER STUDIO SCREEN ====================
-
+// POSTER STUDIO
 class PosterDesignStudio extends StatefulWidget {
   final PropertyItem property;
   final UserAccount agent;
@@ -514,7 +503,8 @@ class PosterDesignStudio extends StatefulWidget {
 
 class _PosterDesignStudioState extends State<PosterDesignStudio> {
   String selectedBadge = 'Immediate Registry';
-  final List<String> availableBadges = <String>[
+
+  final List<String> availableBadges = [
     'Immediate Registry',
     'Bank Loan Approved',
     'Corner Plot Available',
@@ -539,11 +529,479 @@ class _PosterDesignStudioState extends State<PosterDesignStudio> {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: availableBadges.map<Widget>((String badge) {
-                final bool isSel = selectedBadge == badge;
-                return ChoiceChip(
-                  label: Text(badge, style: TextStyle(fontSize: 11, color: isSel ? Colors.white : Colors.black87)),
-                  selected: isSel,
-                  selectedColor: const Color(0xFF0D47A1),
-                  onSelected: (bool val) {
-                    s
+              children: [
+                for (final badge in availableBadges)
+                  ChoiceChip(
+                    label: Text(
+                      badge,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: selectedBadge == badge ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    selected: selectedBadge == badge,
+                    selectedColor: const Color(0xFF0D47A1),
+                    onSelected: (val) => setState(() => selectedBadge = badge),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: AspectRatio(
+                aspectRatio: 0.9,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10)],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        widget.property.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, _, __) => Container(color: Colors.grey.shade900),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF0D47A1), Colors.transparent],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.domain, color: Colors.amber, size: 20),
+                                  const SizedBox(width: 6),
+                                  Text('MKM REAL ESTATE', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)),
+                                child: Text(selectedBadge, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 10)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 84,
+                        left: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(widget.property.title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text(widget.property.location, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(widget.property.size, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.w600, fontSize: 12)),
+                                  Text(widget.property.priceDisplay, style: const TextStyle(color: Colors.lightGreenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF002171), Color(0xFF0D47A1)],
+                              begin: Alignment.bottomLeft,
+                              end: Alignment.topRight,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 22,
+                                backgroundColor: Colors.amber,
+                                child: Icon(Icons.person, color: Colors.black, size: 26),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(widget.agent.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.verified, color: Colors.amber, size: 14),
+                                      ],
+                                    ),
+                                    Text('Contact: ${widget.agent.phone}', style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w600)),
+                                    Text('Agent ID: ${widget.agent.id}', style: const TextStyle(color: Colors.white60, fontSize: 10)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Poster for ${widget.agent.name} is ready for WhatsApp!'),
+                      backgroundColor: Colors.green.shade800,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.share),
+                label: const Text('Share to WhatsApp'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// EMI CALCULATOR
+class EMICalculatorScreen extends StatefulWidget {
+  const EMICalculatorScreen({super.key});
+
+  @override
+  State<EMICalculatorScreen> createState() => _EMICalculatorScreenState();
+}
+
+class _EMICalculatorScreenState extends State<EMICalculatorScreen> {
+  double totalAmount = 1500000;
+  double downPayment = 300000;
+  double interestRate = 8.5;
+  int tenureYears = 10;
+
+  double get monthlyEMI {
+    final principal = totalAmount - downPayment;
+    if (principal <= 0) return 0;
+    final r = (interestRate / 12) / 100;
+    final n = tenureYears * 12;
+    return (principal * r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loanAmount = max(0.0, totalAmount - downPayment);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Plot EMI Calculator', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF0D47A1),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Card(
+              elevation: 4,
+              color: const Color(0xFF0D47A1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const Text('Estimated Monthly Payment', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Text(
+                      '₹${monthlyEMI.toStringAsFixed(0)} / mo',
+                      style: const TextStyle(color: Colors.amber, fontSize: 30, fontWeight: FontWeight.bold),
+                    ),
+                    const Divider(color: Colors.white24, height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Text('Loan Amount', style: TextStyle(color: Colors.white60, fontSize: 11)),
+                            Text('₹${(loanAmount / 100000).toStringAsFixed(2)} Lakhs', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text('Tenure', style: TextStyle(color: Colors.white60, fontSize: 11)),
+                            Text('$tenureYears Years', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _sliderTile('Total Plot Cost', totalAmount, 500000, 10000000, 50000, '₹${(totalAmount / 100000).toStringAsFixed(1)}L', (val) => setState(() => totalAmount = val)),
+            _sliderTile('Down Payment', downPayment, 0, totalAmount, 25000, '₹${(downPayment / 100000).toStringAsFixed(1)}L', (val) => setState(() => downPayment = val)),
+            _sliderTile('Interest Rate (% P.A)', interestRate, 6.0, 15.0, 0.25, '${interestRate.toStringAsFixed(2)}%', (val) => setState(() => interestRate = val)),
+            _sliderTile('Tenure (Years)', tenureYears.toDouble(), 1, 30, 1, '$tenureYears Yrs', (val) => setState(() => tenureYears = val.toInt())),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sliderTile(String title, double val, double min, double max, double step, String display, ValueChanged<double> onChanged) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(display, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
+              ],
+            ),
+            Slider(
+              value: val.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: ((max - min) / step).round(),
+              activeColor: const Color(0xFF0D47A1),
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ADMIN DASHBOARD
+class AdminDashboardScreen extends StatefulWidget {
+  const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  void _openAddPropertyModal() {
+    final titleCtrl = TextEditingController();
+    final locCtrl = TextEditingController();
+    final sizeCtrl = TextEditingController();
+    final rateCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add New Plot Listing'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Plot / Project Title')),
+              TextField(controller: locCtrl, decoration: const InputDecoration(labelText: 'Location / Landmark')),
+              TextField(controller: sizeCtrl, decoration: const InputDecoration(labelText: 'Dimensions (e.g. 1500 sq.ft)')),
+              TextField(controller: rateCtrl, decoration: const InputDecoration(labelText: 'Rate (e.g. ₹1,200/sq.ft)')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (titleCtrl.text.isNotEmpty) {
+                setState(() {
+                  AppDatabase.properties.insert(
+                    0,
+                    PropertyItem(
+                      id: 'PROP-${DateTime.now().millisecondsSinceEpoch}',
+                      title: titleCtrl.text,
+                      location: locCtrl.text,
+                      size: sizeCtrl.text,
+                      priceNumeric: 1500000,
+                      priceDisplay: rateCtrl.text,
+                      badge: 'New Launch',
+                      imageUrl: 'https://picsum.photos/seed/${Random().nextInt(999)}/900/600',
+                    ),
+                  );
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Publish Plot'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('MKM Admin Control Console', style: TextStyle(color: Colors.white, fontSize: 18)),
+        backgroundColor: Colors.black87,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _kpiCard('Active Plots', '${AppDatabase.properties.length}', Icons.landscape, Colors.blue),
+                const SizedBox(width: 10),
+                _kpiCard('Agents', '${AppDatabase.registeredAgents.length}', Icons.groups, Colors.amber.shade800),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Manage Plot Inventory', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D47A1), foregroundColor: Colors.white),
+                  onPressed: _openAddPropertyModal,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Plot'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...AppDatabase.properties.map((prop) => Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: const Icon(Icons.home_work, color: Color(0xFF0D47A1)),
+                    title: Text(prop.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${prop.location} • ${prop.size}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() => AppDatabase.properties.removeWhere((p) => p.id == prop.id));
+                      },
+                    ),
+                  ),
+                )),
+            const SizedBox(height: 24),
+            const Text('Authorized MKM Agents', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            ...AppDatabase.registeredAgents.map((agt) => Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(agt.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${agt.id} • ${agt.phone}'),
+                    trailing: const Chip(label: Text('Active', style: TextStyle(fontSize: 10)), backgroundColor: Colors.lightGreenAccent),
+                  ),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.black12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// AGENT PROFILE
+class AgentProfileScreen extends StatelessWidget {
+  const AgentProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = AppDatabase.currentUser!;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Agent Profile', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF0D47A1),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Center(
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: Color(0xFF0D47A1),
+                child: Icon(Icons.person, size: 50, color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(user.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('ID: ${user.id}', style: const TextStyle(color: Colors.grey)),
+            const Divider(height: 32),
+            ListTile(
+              leading: const Icon(Icons.phone),
+              title: const Text('Contact Number'),
+              subtitle: Text(user.phone),
+            ),
+            ListTile(
+              leading: const Icon(Icons.email),
+              title: const Text('Email ID'),
+              subtitle: Text(user.email),
+            ),
+            ListTile(
+              leading: const Icon(Icons.badge),
+              title: const Text('Designation'),
+              subtitle: const Text('Authorized Senior Property Advisor'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
